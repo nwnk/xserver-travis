@@ -1,0 +1,28 @@
+FROM fedora:rawhide
+MAINTAINER Adam Jackson <ajax@nwnk.net>
+
+# perl is here, even though builddep brings it in implicitly via
+# autobleh, because xts wants it explicitly and is not yet packaged.
+RUN dnf --nodocs -y install dnf-plugins-core perl xset xdpyinfo rendercheck
+# these should be unnecessary, the builddep below should bring them in
+# they don't yet because rawhide is not yet building with meson
+RUN dnf --nodocs -y install meson xkbcomp nettle-devel libtirpc-devel
+RUN dnf --nodocs -y builddep xorg-x11-server
+RUN dnf -y clean all
+
+RUN rm -rf /usr/share/doc/* /usr/share/man/*
+
+RUN mkdir -p /root
+WORKDIR /root
+
+ENV PREFIX=/usr
+
+# xts should be packaged in rpmfusion (thanks Artistic license) at some
+# point; i have a spec file, but have not tested the thing it builds.
+# piglit is packaged, but is not presently usable as such, because the
+# 'xts' test set expects to be pointed at a built copy of xts, not the
+# above packaged thing.
+#
+# until then, we do this:
+RUN git clone --depth 1 git://anongit.freedesktop.org/git/xorg/test/xts && cd xts && ./autogen.sh && make && find . -name ".libs/*.o" | xargs rm -f
+RUN git clone --depth 1 git://anongit.freedesktop.org/git/piglit
