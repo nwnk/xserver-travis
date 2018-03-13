@@ -13,19 +13,22 @@ image as well.
 
 The workflow for updating the Travis docker image is:
 
-    # Generate a new build called "xserver-travis"
-    sudo docker build -t xserver-travis .
+    USER=nwnk
+    DISTRO=rawhide
+    TAG=v0
+    IMAGE=$USER/xserver-travis-$DISTRO:$TAG
 
-    # Tag it and upload it to your dockerhub.
-    #
-    # We use versioned tags so that you can do updates in lockstep of
-    # the image and the X Server's .travis.yml.
-    sudo docker tag xserver-travis username/xserver-travis:v3
-    sudo docker push anholt/xserver-travis:v3
+    # Generate a new image. We use versioned tags so that you can do updates
+    # in lockstep of # the image and the X Server's .travis.yml.
+    sudo docker build -f Dockerfile-$DISTRO -t $IMAGE .
+
+    # Upload it to your dockerhub.
+    sudo docker push $IMAGE
 
     cd ../xserver
     git checkout -b travis-ci-test
-    emacs .travis.yml
-    # Change "anholt/xserver-travis:v3" to your repository and tag
+    emacs .travis.yml # to point to your repository and tag
     git commit -a -m "Test out my new Travis Docker image"
     git push username travis-ci-test
+
+I'll script that better at some point, probably.
